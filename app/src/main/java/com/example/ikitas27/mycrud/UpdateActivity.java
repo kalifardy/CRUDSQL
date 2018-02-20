@@ -2,9 +2,10 @@ package com.example.ikitas27.mycrud;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,45 +21,59 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-
-public class MainActivity extends AppCompatActivity {
-
+public class UpdateActivity extends AppCompatActivity {
     public static final String URL = "http://192.168.1.7/myCrud/";
     private RadioButton radioSexButton;
     private ProgressDialog progress;
 
 
-    private EditText editTextNPM;
-    private EditText editTextNama;
-    private EditText editTextKelas;
-    private Button buttonDaftar;
-    private Button buttonLihat;
-     RadioGroup radioJadwal;
+     EditText editTextNPM;
+     EditText editTextNama;
+     EditText editTextKelas;
+     Button buttonUpdate;
+    RadioGroup radioJadwal;
+    RadioButton pagi;
+    RadioButton siang;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_update);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("Ubah Data");
 
         editTextNPM = (EditText) findViewById(R.id.editTextNPM);
         editTextNama = (EditText) findViewById(R.id.editTextNama);
         editTextKelas = (EditText) findViewById(R.id.editTextKelas);
         radioJadwal = (RadioGroup) findViewById(R.id.radioJadwal);
-        buttonDaftar = (Button) findViewById(R.id.buttonDaftar);
-        buttonLihat = (Button) findViewById(R.id.btnLihat);
+        buttonUpdate = (Button) findViewById(R.id.buttonUpdate);
+        pagi=(RadioButton)findViewById(R.id.radioPagi) ;
+        siang=(RadioButton)findViewById(R.id.radioSiang) ;
 
-        buttonLihat.setOnClickListener(new View.OnClickListener() {
+
+        Intent intent = getIntent();
+        String npm = intent.getStringExtra("npm");
+        String nama = intent.getStringExtra("nama");
+        String kelas = intent.getStringExtra("kelas");
+        String sesi = intent.getStringExtra("jadwal");
+
+        editTextNPM.setText(npm);
+        editTextNama.setText(nama);
+        editTextKelas.setText(kelas);
+
+        if (sesi.equals("Pagi (09.00-11.00 WIB)")) {
+            pagi.setChecked(true);
+        } else {
+            siang.setChecked(true);
+        }
+
+
+        buttonUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(MainActivity.this,ViewActivity.class);
-                startActivity(i);
-            }
-        });
-
-        buttonDaftar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                progress = new ProgressDialog(MainActivity.this);
+                progress = new ProgressDialog(UpdateActivity.this);
                 progress.setCancelable(false);
                 progress.setMessage("Loading....");
                 progress.show();
@@ -74,10 +89,10 @@ public class MainActivity extends AppCompatActivity {
 
                 Retrofit retrofit = new Retrofit.Builder().baseUrl(URL).addConverterFactory(GsonConverterFactory.create()).build();
                 RegisterApi api = retrofit.create(RegisterApi.class);
-                Call<ResponseInsert> call = api.daftar(npm, nama, kelas, jadwal);
-                call.enqueue(new Callback<ResponseInsert>() {
+                Call<Value> call = api.ubah(npm, nama, kelas, jadwal);
+                call.enqueue(new Callback<Value>() {
                     @Override
-                    public void onResponse(Call<ResponseInsert> call, Response<ResponseInsert> response) {
+                    public void onResponse(Call<Value> call, Response<Value> response) {
                         Log.d("response", response.body().toString());
 
                         if (response.isSuccessful()) {
@@ -89,25 +104,33 @@ public class MainActivity extends AppCompatActivity {
                             progress.dismiss();
 
                             if (value.equals("1")) {
-                                Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(UpdateActivity.this, message, Toast.LENGTH_SHORT).show();
                             } else {
-                                Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(UpdateActivity.this, message, Toast.LENGTH_SHORT).show();
                             }
                         }
-
-
                     }
 
                     @Override
-                    public void onFailure(Call<ResponseInsert> call, Throwable t) {
+                    public void onFailure(Call<Value> call, Throwable t) {
                         progress.dismiss();
-                        Toast.makeText(MainActivity.this, "Jaringan eror!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(UpdateActivity.this, "Jaringan eror!", Toast.LENGTH_SHORT).show();
                     }
                 });
+
             }
+
+
         });
+
     }
-
-
-
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }
